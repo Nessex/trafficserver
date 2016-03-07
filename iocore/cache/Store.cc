@@ -494,13 +494,13 @@ Span::init(const char *path, int64_t size)
   case S_IFBLK:
   case S_IFCHR:
 
-#if defined(linux)
+#if HAVE_LINUX_MAJOR_H
     if (major(sbuf.st_rdev) == RAW_MAJOR && minor(sbuf.st_rdev) == 0) {
       Warning("cache %s '%s' is the raw device control interface", span_file_typename(sbuf.st_mode), path);
       serr = SPAN_ERROR_UNSUPPORTED_DEVTYPE;
       goto fail;
     }
-#endif
+#endif // HAVE_LINUX_MAJOR_H
 
     if (!ink_file_get_geometry(fd, geometry)) {
       serr = make_span_error(errno);
