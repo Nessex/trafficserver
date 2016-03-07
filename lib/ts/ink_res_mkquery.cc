@@ -85,6 +85,10 @@
 
 #define SPRINTF(x) (sprintf x)
 
+#ifndef __THROW //For musl
+#define __THROW
+#endif
+
 /*%
  * Form all types of queries.
  * Returns the size of the result or -1.
