@@ -24,7 +24,6 @@
 #include "ts/ink_assert.h"
 #include "ts/ink_atomic.h"
 #include "ts/ink_resource.h"
-#include <execinfo.h>
 
 volatile int res_track_memory = 0; // Disabled by default
 
