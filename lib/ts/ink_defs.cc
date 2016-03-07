@@ -33,6 +33,8 @@
 #if defined(linux) || defined(freebsd) || defined(darwin)
 #include <sys/types.h>
 #include <sys/param.h>
+#endif
+#if defined(freebsd) || defined(darwin)
 #include <sys/sysctl.h>
 #endif
 #if defined(linux)
