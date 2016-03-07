@@ -45,7 +45,10 @@
 #include "ts/ink_queue.h"
 #include "ts/ink_defs.h"
 #include "ts/ink_resource.h"
+
+#ifdef __GLIBC__
 #include <execinfo.h>
+#endif // __GLIBC__
 
 #define RND16(_x) (((_x) + 15) & ~15)
 
@@ -204,6 +207,7 @@ public:
   } proto;
 };
 
+#ifdef __GLIBC__
 template <class C> class TrackerClassAllocator : public ClassAllocator<C>
 {
 public:
@@ -252,5 +256,7 @@ private:
   uint64_t allocations;
   ink_mutex trackerLock;
 };
+
+#endif // __GLIBC__
 
 #endif // _Allocator_h_
