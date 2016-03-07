@@ -24,6 +24,7 @@
 #include "ts/ink_defs.h"
 #include "ts/ink_assert.h"
 #include "ts/ink_sys_control.h"
+#include <stdio.h>
 
 rlim_t
 ink_max_out_rlimit(int which, bool max_it, bool unlim_it)
