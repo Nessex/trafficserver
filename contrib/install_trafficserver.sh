@@ -57,6 +57,7 @@ CONFIGURE_OPTIONS=""
 FULL_BUILD_PATH=$EC2_EPHEMERAL/$PROJECT/$SVN_LOC
 
 SUSE="suse"
+ALPINE="alpine"
 FEDORA="fedora"
 REDHAT="redhat" # also exists on Fedora
 UBUNTU="ubuntu"
@@ -82,6 +83,19 @@ function updateInstall() {
         libpcre3-dev \
         curl
         apt-get install -y subversion git git-svn
+    elif [ "$DISTRIB_ID" = "$ALPINE" ]; then
+        apk update
+        apk upgrade
+        # Could cut down alpine-sdk to just the pieces needed
+        apk add alpine-sdk \
+            pcre-dev \
+            tcl-dev \
+            expat-dev \
+            autoconf \
+            automake \
+            libtool \
+            pkgconfig \
+            openssl-dev
     elif [ "$DISTRIB_ID" = "$FEDORA" ]; then
         yum update
         yum upgrade
@@ -362,6 +376,8 @@ fi
 
 if [ -e /etc/SuSE-release ]; then
     DISTRIB_ID=$SUSE
+if [ -e /etc/alpine-release ]; then
+    DISTRIB_ID=$ALPINE
 elif [ -e /etc/fedora-release ]; then
     DISTRIB_ID=$FEDORA
 elif [ -e /etc/redhat-release ]; then
