@@ -63,6 +63,8 @@ elif [ -e /etc/debian_version ]; then
     DISTRIB_ID="debian" # also exists on Ubuntu
 elif [ -e /etc/slackware-version ]; then
     DISTRIB_ID="slackware"
+elif [ -e /etc/alpine-release ]; then
+    DISTRIB_ID="alpine"
 elif [ "$UNAME_S" = "Darwin" ]; then
     DISTRIB_ID="Darwin"
 elif [ "$UNAME_S" = "FreeBSD" ]; then
@@ -289,6 +291,13 @@ case "$1" in
             echo -n "Starting ${TS_PACKAGE_NAME}"
             startproc -p $TC_PIDFILE $TC_DAEMON $TC_DAEMON_ARGS
             rc_status -v
+        elif [ "$DISTRIB_ID" = "alpine" ]; then
+            echo -n "Starting ${TS_PACKAGE_NAME}"
+            if [ -e $FILE ]; then
+                exit 1
+            else
+                /bin/sh $TC_DAEMON $TC_DAEMON_ARGS
+            fi
         elif [ "$DISTRIB_ID" = "Darwin" ]; then
             echo "Starting ${TS_PACKAGE_NAME}"
             launchctl bsexec / launchctl list $TC_NAME > /dev/null 2>&1 && exit 0
@@ -343,7 +352,7 @@ case "$1" in
             echo "Stopping ${TS_NAME}"
             kill $(cat $TS_PIDFILE)
             rm -f ${TS_PIDFILE}
-        elif [ "$DISTRIB_ID" = "FreeBSD" ]; then
+        elif [ "$DISTRIB_ID" = "FreeBSD" -o "$DISTRIB_ID" = "alpine" ]; then
             echo "Stopping ${TS_PACKAGE_NAME}"
             if [ -e "$TC_PIDFILE" ]; then 
                 kill $(cat $TC_PIDFILE)
@@ -376,6 +385,9 @@ case "$1" in
             echo -n "Reloading ${NAME}"
             $TL_BINARY -x
             rc_status -v
+        elif [ "$DISTRIB_ID" = "alpine" ]; then
+            echo -n "Reloading ${NAME}"
+            $TL_BINARY -x
         elif [ "$DISTRIB_ID" = "Darwin" ]; then
             echo "Reloading ${NAME}"
             $TL_BINARY -x
@@ -472,6 +484,8 @@ case "$1" in
             echo "Usage: $0 {start|stop|reload|restart|status}"
         elif [ "$DISTRIB_ID" = "suse" ]; then
             echo "Usage: $0 {start|stop|restart|status}"
+        elif [ "$DISTRIB_ID" = "alpine" ]; then
+            echo "Usage:\ $0 {start|stop|restart}"
         elif [ "$DISTRIB_ID" = "Darwin" ]; then
             echo "Usage: $0 {start|stop|restart|status}"
         elif [ "$DISTRIB_ID" = "FreeBSD" ]; then
