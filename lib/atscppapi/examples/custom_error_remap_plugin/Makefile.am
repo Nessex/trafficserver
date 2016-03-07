@@ -1,3 +1,4 @@
+#
 #  Licensed to the Apache Software Foundation (ASF) under one
 #  or more contributor license agreements.  See the NOTICE file
 #  distributed with this work for additional information
@@ -14,25 +15,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-pkg set-publisher -g http://pkg.omniti.com/omniti-ms/ ms.omniti.com
+include $(top_srcdir)/build/plugins.mk
 
-pkg refresh
+AM_CPPFLAGS += -I$(top_srcdir)/lib/atscppapi/src/include -Wno-unused-variable
 
-# Base ATS build dependencies.
-pkg install \
-  developer/gcc46 \
-  developer/object-file \
-  developer/linker \
-  developer/library/lint \
-  system/header \
-  system/library/math/header-math \
-  developer/lexer/flex \
-  developer/parser/bison \
-  developer/build/libtool \
-  developer/versioning/git \
-  omniti/runtime/tcl-8 \
-  developer/build/automake-111 \
-  developer/build/autoconf \
-  developer/build/gnu-make || true
-
-pkg update || true
+target=CustomErrorRemapPlugin.so
+pkglib_LTLIBRARIES = CustomErrorRemapPlugin.la
+CustomErrorRemapPlugin_la_SOURCES = CustomErrorRemapPlugin.cc
+CustomErrorRemapPlugin_la_LDFLAGS = -module -avoid-version -shared -L$(top_builddir)/lib/atscppapi/src/ -latscppapi $(TS_PLUGIN_LDFLAGS)

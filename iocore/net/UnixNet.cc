@@ -140,16 +140,14 @@ update_cop_config(const char *name, RecDataT data_type ATS_UNUSED, RecData data,
 
 PollCont::PollCont(ProxyMutex *m, int pt) : Continuation(m), net_handler(NULL), nextPollDescriptor(NULL), poll_timeout(pt)
 {
-  pollDescriptor = new PollDescriptor;
-  pollDescriptor->init();
+  pollDescriptor = new PollDescriptor();
   SET_HANDLER(&PollCont::pollEvent);
 }
 
 PollCont::PollCont(ProxyMutex *m, NetHandler *nh, int pt)
   : Continuation(m), net_handler(nh), nextPollDescriptor(NULL), poll_timeout(pt)
 {
-  pollDescriptor = new PollDescriptor;
-  pollDescriptor->init();
+  pollDescriptor = new PollDescriptor();
   SET_HANDLER(&PollCont::pollEvent);
 }
 
@@ -592,7 +590,8 @@ NetHandler::manage_active_queue(bool ignore_queue_size = false)
   int total_idle_count = 0;
   for (; vc != NULL; vc = vc_next) {
     vc_next = vc->active_queue_link.next;
-    if ((vc->next_inactivity_timeout_at <= now) || (vc->next_activity_timeout_at <= now)) {
+    if ((vc->inactivity_timeout_in && vc->next_inactivity_timeout_at <= now) ||
+        (vc->active_timeout_in && vc->next_activity_timeout_at <= now)) {
       _close_vc(vc, now, handle_event, closed, total_idle_time, total_idle_count);
     }
     if (ignore_queue_size == false && max_connections_active_per_thread_in > active_queue_size) {
