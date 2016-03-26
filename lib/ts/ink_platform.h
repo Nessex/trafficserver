@@ -26,12 +26,10 @@
 #define _ink_platform_h
 
 #include "ts/ink_config.h"
+#include <stdio.h>
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
-#ifdef HAVE_STDIO_H
-#include <stdio.h>
 #endif
 #include <ctype.h>
 #ifdef HAVE_STRING_H
