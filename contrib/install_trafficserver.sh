@@ -281,33 +281,33 @@ function detectEC2() {
 }
 
 function askUser() {
-usage;
-echo;
+    usage;
+    echo;
 
-usageLine;
+    usageLine;
 
-read -p "" RESPONSE
+    read -p "" RESPONSE
 
-if [ "$RESPONSE" = "freshBuild" ]; then
-    $RESPONSE;
-    exit 0;
-elif [ "$RESPONSE" = "forceBuild" ]; then
-    $RESPONSE;
-    exit 0;
-elif [ "$RESPONSE" = "flipDebug" ]; then
-    $RESPONSE;
-    askUser;
-elif [ "$RESPONSE" = "flipEC2" ]; then
-    $RESPONSE;
-    askUser;
-elif [ "$RESPONSE" = "EXIT" ]; then
-    echo "Exiting NOW!"
-    exit 0;
-else
-    #usageLine;
-    askUser;
-    return 1;
-fi
+    if [ "$RESPONSE" = "freshBuild" ]; then
+        $RESPONSE;
+        exit 0;
+    elif [ "$RESPONSE" = "forceBuild" ]; then
+        $RESPONSE;
+        exit 0;
+    elif [ "$RESPONSE" = "flipDebug" ]; then
+        $RESPONSE;
+        askUser;
+    elif [ "$RESPONSE" = "flipEC2" ]; then
+        $RESPONSE;
+        askUser;
+    elif [ "$RESPONSE" = "EXIT" ]; then
+        echo "Exiting NOW!"
+        exit 0;
+    else
+        #usageLine;
+        askUser;
+        return 1;
+    fi
 
 }
 
@@ -376,7 +376,7 @@ fi
 
 if [ -e /etc/SuSE-release ]; then
     DISTRIB_ID=$SUSE
-if [ -e /etc/alpine-release ]; then
+elif [ -e /etc/alpine-release ]; then
     DISTRIB_ID=$ALPINE
 elif [ -e /etc/fedora-release ]; then
     DISTRIB_ID=$FEDORA
@@ -399,6 +399,9 @@ case "$1" in
     $1;
     ;;
   forceBuild)
+    $1;
+    ;;
+  updateInstall)
     $1;
     ;;
   freshDebugBuild)
