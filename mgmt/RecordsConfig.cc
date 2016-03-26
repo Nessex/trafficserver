@@ -1114,12 +1114,6 @@ static const RecordElement RecordsConfig[] =
   //        #########
   //        # Stats #
   //        #########
-  //# frequency is in seconds
-  {RECT_CONFIG, "proxy.config.stats.snap_frequency", RECD_INT, "60", RECU_NULL, RR_NULL, RECC_NULL, NULL, RECA_NULL}
-  ,
-  // Jira TS-21
-  {RECT_CONFIG, "proxy.config.stats.snap_file", RECD_STRING, "stats.snap", RECU_RESTART_TS, RR_NULL, RECC_NULL, NULL, RECA_NULL}
-  ,
   {RECT_CONFIG, "proxy.config.stats.enable_lua", RECD_INT, "0", RECU_RESTART_TM, RR_NULL, RECC_INT, "[0-1]", RECA_NULL}
   ,
 
@@ -1251,8 +1245,6 @@ static const RecordElement RecordsConfig[] =
   {RECT_CONFIG, "proxy.config.ssl.client.cipher_suite", RECD_STRING, NULL, RECU_RESTART_TS, RR_NULL, RECC_NULL, NULL, RECA_NULL}
   ,
   {RECT_CONFIG, "proxy.config.ssl.server.honor_cipher_order", RECD_INT, "1", RECU_RESTART_TS, RR_NULL, RECC_INT, "[0-1]", RECA_NULL}
-  ,
-  {RECT_CONFIG, "proxy.config.ssl.server_port", RECD_INT, "-1", RECU_RESTART_TS, RR_NULL, RECC_INT, "[0-65535]", RECA_NULL}
   ,
   {RECT_CONFIG, "proxy.config.ssl.client.certification_level", RECD_INT, "0", RECU_RESTART_TS, RR_NULL, RECC_INT, "[0-2]", RECA_NULL}
   ,
@@ -1982,6 +1974,10 @@ static const RecordElement RecordsConfig[] =
   {RECT_CONFIG, "proxy.config.http2.enabled", RECD_INT, "0", RECU_RESTART_TM, RR_NULL, RECC_INT, "[0-1]", RECA_NULL}
   ,
   {RECT_CONFIG, "proxy.config.http2.max_concurrent_streams_in", RECD_INT, "100", RECU_DYNAMIC, RR_NULL, RECC_STR, "^[0-9]+$", RECA_NULL}
+  ,
+  {RECT_CONFIG, "proxy.config.http2.min_concurrent_streams_in", RECD_INT, "10", RECU_DYNAMIC, RR_NULL, RECC_STR, "^[0-9]+$", RECA_NULL}
+  ,
+  {RECT_CONFIG, "proxy.config.http2.max_active_streams_in", RECD_INT, "0", RECU_DYNAMIC, RR_NULL, RECC_STR, "^[0-9]+$", RECA_NULL}
   ,
   {RECT_CONFIG, "proxy.config.http2.initial_window_size_in", RECD_INT, "1048576", RECU_DYNAMIC, RR_NULL, RECC_STR, "^[0-9]+$", RECA_NULL}
   ,

@@ -533,11 +533,10 @@ rcv_window_update_frame(Http2ConnectionState &cstate, const Http2Frame &frame)
   uint32_t size;
   const Http2StreamId sid = frame.header().streamid;
 
-  DebugHttp2Stream(cstate.ua_session, sid, "Received WINDOW_UPDATE frame");
-
   //  A WINDOW_UPDATE frame with a length other than 4 octets MUST be
   //  treated as a connection error of type FRAME_SIZE_ERROR.
   if (frame.header().length != HTTP2_WINDOW_UPDATE_LEN) {
+    DebugHttp2Stream(cstate.ua_session, sid, "Received WINDOW_UPDATE frame - length incorrect");
     return Http2Error(HTTP2_ERROR_CLASS_CONNECTION, HTTP2_ERROR_FRAME_SIZE_ERROR);
   }
 
@@ -545,6 +544,9 @@ rcv_window_update_frame(Http2ConnectionState &cstate, const Http2Frame &frame)
     // Connection level window update
     frame.reader()->memcpy(buf, sizeof(buf), 0);
     http2_parse_window_update(make_iovec(buf, sizeof(buf)), size);
+
+    DebugHttp2Stream(cstate.ua_session, sid, "Received WINDOW_UPDATE frame - updated to: %zd delta: %u",
+                     (cstate.client_rwnd + size), size);
 
     // A receiver MUST treat the receipt of a WINDOW_UPDATE frame with a
     // connection
@@ -581,6 +583,9 @@ rcv_window_update_frame(Http2ConnectionState &cstate, const Http2Frame &frame)
 
     frame.reader()->memcpy(buf, sizeof(buf), 0);
     http2_parse_window_update(make_iovec(buf, sizeof(buf)), size);
+
+    DebugHttp2Stream(cstate.ua_session, sid, "Received WINDOW_UPDATE frame - updated to: %zd delta: %u",
+                     (stream->client_rwnd + size), size);
 
     // A receiver MUST treat the receipt of a WINDOW_UPDATE frame with an
     // flow control window increment of 0 as a stream error of type
@@ -722,6 +727,8 @@ Http2ConnectionState::main_event_handler(int event, void *edata)
     // settings.
     Http2ConnectionSettings configured_settings;
     configured_settings.settings_from_configs();
+    configured_settings.set(HTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, _adjust_concurrent_stream());
+
     send_settings_frame(configured_settings);
 
     if (server_settings.get(HTTP2_SETTINGS_INITIAL_WINDOW_SIZE) > HTTP2_INITIAL_WINDOW_SIZE) {
@@ -919,7 +926,6 @@ Http2ConnectionState::send_data_frame(FetchSM *fetch_sm)
   uint8_t payload_buffer[buf_len];
 
   Http2Stream *stream = static_cast<Http2Stream *>(fetch_sm->ext_get_user_data());
-  DebugHttp2Stream(ua_session, stream->get_id(), "Send DATA frame");
 
   if (stream->get_state() == HTTP2_STREAM_STATE_CLOSED) {
     return;
@@ -952,6 +958,8 @@ Http2ConnectionState::send_data_frame(FetchSM *fetch_sm)
     }
 
     // Create frame
+    DebugHttp2Stream(ua_session, stream->get_id(), "Send DATA frame - client window con: %zd stream: %zd payload: %zd", client_rwnd,
+                     stream->client_rwnd, payload_length);
     Http2Frame data(HTTP2_FRAME_TYPE_DATA, stream->get_id(), flags);
     data.alloc(buffer_size_index[HTTP2_FRAME_TYPE_DATA]);
     http2_write_data(payload_buffer, payload_length, data.write());
@@ -959,6 +967,7 @@ Http2ConnectionState::send_data_frame(FetchSM *fetch_sm)
 
     // Change state to 'closed' if its end of DATAs.
     if (flags & HTTP2_FLAGS_DATA_END_STREAM) {
+      DebugHttp2Stream(ua_session, stream->get_id(), "End of DATA frame");
       if (!stream->change_state(data.header().type, data.header().flags)) {
         this->send_goaway_frame(stream->get_id(), HTTP2_ERROR_PROTOCOL_ERROR);
       }
@@ -1159,4 +1168,37 @@ Http2ConnectionState::send_window_update_frame(Http2StreamId id, uint32_t size)
   // xmit event
   SCOPED_MUTEX_LOCK(lock, this->ua_session->mutex, this_ethread());
   this->ua_session->handleEvent(HTTP2_SESSION_EVENT_XMIT, &window_update);
+}
+
+// Return min_concurrent_streams_in when current client streams number is larger than max_active_streams_in.
+// Main purpose of this is preventing DDoS Attacks.
+unsigned
+Http2ConnectionState::_adjust_concurrent_stream()
+{
+  if (Http2::max_active_streams_in == 0) {
+    // Throttling down is disabled.
+    return Http2::max_concurrent_streams_in;
+  }
+
+  int64_t current_client_streams = 0;
+  RecGetRawStatSum(http2_rsb, HTTP2_STAT_CURRENT_CLIENT_STREAM_COUNT, &current_client_streams);
+
+  DebugHttp2Con(ua_session, "current client streams: %" PRId64, current_client_streams);
+
+  if (current_client_streams >= Http2::max_active_streams_in) {
+    if (!Http2::throttling) {
+      Warning("too many streams: %" PRId64 ", reduce SETTINGS_MAX_CONCURRENT_STREAMS to %d", current_client_streams,
+              Http2::min_concurrent_streams_in);
+      Http2::throttling = true;
+    }
+
+    return Http2::min_concurrent_streams_in;
+  } else {
+    if (Http2::throttling) {
+      Note("revert SETTINGS_MAX_CONCURRENT_STREAMS to %d", Http2::max_concurrent_streams_in);
+      Http2::throttling = false;
+    }
+  }
+
+  return Http2::max_concurrent_streams_in;
 }
